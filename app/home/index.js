@@ -46,10 +46,18 @@ const HomeScreen = () => {
 
   const applyFilters = () => {
     console.log("Applying Filters");
+    if (filters) {
+      (page = 1), setImages([]);
+      let params = { page, ...filters };
+      if (activeCategory) params.category = activeCategory;
+      if (search) params.q = search;
+      fetchImages(params, false);
+    }
     closeFilterModal();
   };
   const resetFilters = () => {
     console.log("Resetting Filters");
+    setFilters(null);
     closeFilterModal();
   };
 
@@ -60,26 +68,27 @@ const HomeScreen = () => {
     page = 1;
     let params = {
       page,
+      ...filters,
     };
-    if (category) params.category = category;
+    if (category) params.category = activeCategory;
     fetchImages(params, false);
   };
 
   const handleSearch = (text) => {
-    console.log("Searching for:", text);
+    console.log("Searching for:", text, ...filters);
     setSearch(text);
     if (text.length > 2) {
       page = 1;
       setImages([]);
       setactiveCategory(null); //set setactiveCategory to null when searching
-      fetchImages({ page, q: text }, false);
+      fetchImages({ page, q: text, ...filters }, false);
     }
     if (text == "") {
       page = 1;
       searchRefinput?.current?.clear();
       setImages([]);
       setactiveCategory(null); //set setactiveCategory to null when searching
-      fetchImages({ page }, false);
+      fetchImages({ page, ...filters }, false);
     }
   };
 
@@ -89,6 +98,21 @@ const HomeScreen = () => {
 
   const closeFilterModal = () => {
     modalRef.current.close();
+  };
+
+  const clearThisFilterKey = (filterName) => {
+    console.log("filter deleted:", filterName);
+    let filterz = { ...filters };
+    delete filterz[filterName];
+    setFilters({ ...filterz });
+    page = 1;
+    setImages([]);
+    let params = {
+      page,
+      ...filterz,
+    };
+    if (activeCategory) params.Categories = activeCategory;
+    fetchImages(params, false);
   };
 
   const clearSearch = () => {
@@ -152,6 +176,48 @@ const HomeScreen = () => {
             activeCategory={activeCategory}
             handleChangeCategory={handleChangeCategory}
           />
+          {/* filter section */}
+          {filters && (
+            <View>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.filters}
+              >
+                {Object.keys(filters).map((key, index) => {
+                  return (
+                    <View key={key} style={styles.filterItem}>
+                      {key == "colors" ? (
+                        <View
+                          style={{
+                            height: 20,
+                            width: 30,
+                            borderRadius: 7,
+                            backgroundColor: filters[key],
+                          }}
+                        ></View>
+                      ) : (
+                        <Text style={styles.filterItemText}>
+                          {filters[key]}
+                        </Text>
+                      )}
+
+                      <Pressable
+                        onPress={() => clearThisFilterKey(key)}
+                        style={styles.filterCloseIcon}
+                      >
+                        <Ionicons
+                          name="close"
+                          size={14}
+                          color={theme.colors.neutral(0.9)}
+                        />
+                      </Pressable>
+                    </View>
+                  );
+                })}
+              </ScrollView>
+            </View>
+          )}
           {/* Masonry grid*/}
           <View>{images.length > 0 && <ImagesGrid images={images} />}</View>
         </View>
@@ -210,5 +276,29 @@ const styles = StyleSheet.create({
     fontSize: hp(1.8),
   },
   categories: {},
+  filters: {
+    gap: 10,
+    paddingHorizontal: wp(4),
+  },
+  filterItem: {
+    marginTop: 10,
+    backgroundColor: theme.colors.grayBG,
+    padding: 3,
+    alignItems: "center",
+    flexDirection: "row",
+    borderRadius: theme.radius.xs,
+    padding: 10,
+    paddingHorizontal: 10,
+    gap: 10,
+  },
+  filterItemText: {
+    fontSize: hp(1.8),
+  },
+  closeIcon: {
+    backgroundColor: theme.colors.neutral(0.2),
+    padding: 4,
+    borderRadius: 7,
+  },
 });
+
 export default HomeScreen;

@@ -1,15 +1,16 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Pressable } from "react-native";
 import React, { useMemo } from "react";
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { BlurView } from "expo-blur";
 import Animated, {
   Extrapolation,
+  FadeInDown,
   interpolate,
   useAnimatedStyle,
 } from "react-native-reanimated";
 import { capitaliz, hp } from "../helpers/common";
 import { theme } from "../constants/theme";
-import { SectionView } from "./filterViews";
+import { ColorsFilters, SectionView } from "./filterViews";
 import { CommmonFiltersRow } from "./filterViews";
 import { data } from "../constants/data";
 
@@ -39,7 +40,12 @@ const FiltersModal = ({
             let sectionData = data.filters[sectionName];
             let title = capitaliz(sectionName);
             return (
-              <View key={sectionName}>
+              <Animated.View
+                entering={FadeInDown.delay(index * 100 + 100)
+                  .springify()
+                  .damping(11)}
+                key={sectionName}
+              >
                 <SectionView
                   title={title}
                   content={sectionView({
@@ -49,9 +55,24 @@ const FiltersModal = ({
                     filterName: sectionName,
                   })}
                 />
-              </View>
+              </Animated.View>
             );
           })}
+          {/* Actions */}
+          <Animated.View
+            entering={FadeInDown.delay(500).springify().damping(11)}
+            style={styles.actionsContainer}
+          >
+            <Pressable
+              onPress={onReset}
+              style={[styles.resetButton, { color: theme.colors.neutral(0.9) }]}
+            >
+              <Text style={styles.buttonText}>Reset</Text>
+            </Pressable>
+            <Pressable onPress={onApply} style={[styles.ApplyButton]}>
+              <Text style={[styles.buttonText, { color: "#fff" }]}>Apply</Text>
+            </Pressable>
+          </Animated.View>
         </View>
       </BottomSheetView>
     </BottomSheetModal>
@@ -62,7 +83,7 @@ const sections = {
   order: (props) => <CommmonFiltersRow {...props} />,
   orientation: (props) => <CommmonFiltersRow {...props} />,
   type: (props) => <CommmonFiltersRow {...props} />,
-  colors: (props) => <CommmonFiltersRow {...props} />,
+  colors: (props) => <ColorsFilters {...props} />,
 };
 
 const CustomBackdrop = ({ animatedIndex, style }) => {
@@ -102,7 +123,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     gap: 15,
-    width: "100%",
+    // width: "100%",
 
     paddingHorizontal: 20,
     paddingVertical: 10,
@@ -112,6 +133,33 @@ const styles = StyleSheet.create({
     fontWeight: theme.fontWeight.semiBold,
     color: theme.colors.neutral(0.8),
     marginBottom: 5,
+  },
+  actionsContainer: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  resetButton: {
+    alignItems: "center",
+    flex: 1,
+    borderWidth: 2,
+    borderColor: theme.colors.grayBG,
+    backgroundColor: theme.colors.neutral(0.3),
+    padding: 12,
+    borderRadius: theme.radius.md,
+    borderCurve: "continuous",
+  },
+  ApplyButton: {
+    alignItems: "center",
+    flex: 1,
+    backgroundColor: theme.colors.neutral(0.8),
+    padding: 12,
+    borderRadius: theme.radius.md,
+    borderCurve: "continuous",
+  },
+  buttonText: {
+    fontSize: hp(2.2),
   },
 });
 export default FiltersModal;
