@@ -15,6 +15,7 @@ import Categories from "../../components/categories";
 import { apiCall } from "../../api";
 import ImagesGrid from "../../components/ImagesGrid";
 import { debounce } from "lodash";
+import FiltersModal from "../../components/filtersModal";
 
 var page = 1;
 const HomeScreen = () => {
@@ -22,8 +23,10 @@ const HomeScreen = () => {
   const paddingTop = top > 0 ? top + 10 : 30;
   const [search, setSearch] = useState("");
   const searchRefinput = useRef();
+  const [filters, setFilters] = useState(null);
   const [images, setImages] = useState([]);
   const [activeCategory, setactiveCategory] = useState(null);
+  const modalRef = useRef(null);
 
   useEffect(() => {
     fetchImages();
@@ -41,8 +44,25 @@ const HomeScreen = () => {
     }
   };
 
+  const applyFilters = () => {
+    console.log("Applying Filters");
+    closeFilterModal();
+  };
+  const resetFilters = () => {
+    console.log("Resetting Filters");
+    closeFilterModal();
+  };
+
   const handleChangeCategory = (category) => {
     setactiveCategory(category);
+    clearSearch();
+    setImages([]);
+    page = 1;
+    let params = {
+      page,
+    };
+    if (category) params.category = category;
+    fetchImages(params, false);
   };
 
   const handleSearch = (text) => {
@@ -51,20 +71,31 @@ const HomeScreen = () => {
     if (text.length > 2) {
       page = 1;
       setImages([]);
-      fetchImages({ page, q: text });
+      setactiveCategory(null); //set setactiveCategory to null when searching
+      fetchImages({ page, q: text }, false);
     }
     if (text == "") {
       page = 1;
       searchRefinput?.current?.clear();
       setImages([]);
-      fetchImages({ page });
+      setactiveCategory(null); //set setactiveCategory to null when searching
+      fetchImages({ page }, false);
     }
+  };
+
+  const openFilterModal = () => {
+    modalRef.current.present();
+  };
+
+  const closeFilterModal = () => {
+    modalRef.current.close();
   };
 
   const clearSearch = () => {
     setSearch("");
     searchRefinput?.current?.clear();
   };
+  console.log(filters);
 
   const hanldeTextDebounce = useCallback(debounce(handleSearch, 400), []);
 
@@ -75,7 +106,7 @@ const HomeScreen = () => {
         <Pressable>
           <Text style={styles.title}>Pixels</Text>
         </Pressable>
-        <Pressable>
+        <Pressable onPress={openFilterModal}>
           <FontAwesome6
             name="bars-staggered"
             size={22}
@@ -125,6 +156,14 @@ const HomeScreen = () => {
           <View>{images.length > 0 && <ImagesGrid images={images} />}</View>
         </View>
       </ScrollView>
+      <FiltersModal
+        filters={filters}
+        setFilters={setFilters}
+        onclose={closeFilterModal}
+        onApply={applyFilters}
+        onReset={resetFilters}
+        modalRef={modalRef}
+      />
     </View>
   );
 };
