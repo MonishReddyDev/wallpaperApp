@@ -26,13 +26,16 @@ const HomeScreen = () => {
   const [filters, setFilters] = useState(null);
   const [images, setImages] = useState([]);
   const [activeCategory, setactiveCategory] = useState(null);
+  const [isEndReached, setIsEndReached] = useState(false);
   const modalRef = useRef(null);
+  const scrollRef = useRef(null);
 
   useEffect(() => {
     fetchImages();
   }, []);
 
-  const fetchImages = async (params = { page: 1 }, append = false) => {
+  const fetchImages = async (params = { page: 1 }, append = true) => {
+    console.log("Params", params, append);
     let res = await apiCall(params);
     // console.log("Got url", res.data?.hits);
     if (res.success && res.data.hits) {
@@ -75,7 +78,7 @@ const HomeScreen = () => {
   };
 
   const handleSearch = (text) => {
-    console.log("Searching for:", text, ...filters);
+    // console.log("Searching for:", text, ...filters);
     setSearch(text);
     if (text.length > 2) {
       page = 1;
@@ -101,7 +104,7 @@ const HomeScreen = () => {
   };
 
   const clearThisFilterKey = (filterName) => {
-    console.log("filter deleted:", filterName);
+    // console.log("filter deleted:", filterName);
     let filterz = { ...filters };
     delete filterz[filterName];
     setFilters({ ...filterz });
@@ -119,7 +122,37 @@ const HomeScreen = () => {
     setSearch("");
     searchRefinput?.current?.clear();
   };
-  console.log(filters);
+
+  const handleScroll = (event) => {
+    const contentHeight = event.nativeEvent.contentSize.height;
+    const scrollViewHeight = event.nativeEvent.layoutMeasurement.height;
+    const scrolloffset = event.nativeEvent.contentOffset.y;
+    const bottonPosition = contentHeight - scrollViewHeight;
+
+    if (scrolloffset >= bottonPosition - 1) {
+      if (!isEndReached) {
+        setIsEndReached(true);
+        console.log(" reached bottom");
+        /// fetch images
+        ++page;
+        let params = {
+          page,
+          ...filters,
+        };
+        if (activeCategory) params.category = activeCategory;
+        if (search) params.q = search;
+        fetchImages(params);
+      } else if (isEndReached) {
+        setIsEndReached(false);
+      }
+    }
+  };
+  const handleScrollUp = () => {
+    scrollRef?.current?.scrollTo({
+      y: 0,
+      animated: true,
+    });
+  };
 
   const hanldeTextDebounce = useCallback(debounce(handleSearch, 400), []);
 
@@ -127,7 +160,7 @@ const HomeScreen = () => {
     <View style={[styles.container, { paddingTop }]}>
       {/*Header */}
       <View style={styles.Header}>
-        <Pressable>
+        <Pressable onPress={handleScrollUp}>
           <Text style={styles.title}>Pixels</Text>
         </Pressable>
         <Pressable onPress={openFilterModal}>
@@ -139,7 +172,12 @@ const HomeScreen = () => {
         </Pressable>
       </View>
 
-      <ScrollView contentContainerStyle={{ gap: 15, borderWidth: 0 }}>
+      <ScrollView
+        onScroll={handleScroll}
+        scrollEventThrottle={5} //how offten the scrolling event will fire while scrolling(in ms)
+        contentContainerStyle={{ gap: 15, borderWidth: 0 }}
+        ref={scrollRef}
+      >
         {/*Search Bar */}
         <View style={styles.SearchBar}>
           <View style={styles.searchIcon}>
