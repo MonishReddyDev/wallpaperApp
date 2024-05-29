@@ -3,6 +3,7 @@ import React from "react";
 import { Image } from "expo-image";
 import { getImageSize, wp } from "../helpers/common";
 import { theme } from "../constants/theme";
+import { router } from "expo-router";
 
 const ImageCard = ({ item, index, columns }) => {
   const isLastinRow = () => {
@@ -14,7 +15,12 @@ const ImageCard = ({ item, index, columns }) => {
   };
 
   return (
-    <Pressable style={[styles.ImageWrapper, !isLastinRow() && styles.spacing]}>
+    <Pressable
+      onPress={() =>
+        router.push({ pathname: "home/image", params: { ...item } })
+      }
+      style={[styles.ImageWrapper, !isLastinRow() && styles.spacing]}
+    >
       <Image
         style={[styles.Image, getImageHeight()]}
         source={item.webformatURL}

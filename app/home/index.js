@@ -16,6 +16,7 @@ import { apiCall } from "../../api";
 import ImagesGrid from "../../components/ImagesGrid";
 import { debounce } from "lodash";
 import FiltersModal from "../../components/filtersModal";
+import { useRouter } from "expo-router";
 
 var page = 1;
 const HomeScreen = () => {
@@ -25,6 +26,7 @@ const HomeScreen = () => {
   const searchRefinput = useRef();
   const [filters, setFilters] = useState(null);
   const [images, setImages] = useState([]);
+  const router = useRouter();
   const [activeCategory, setactiveCategory] = useState(null);
   const [isEndReached, setIsEndReached] = useState(false);
   const modalRef = useRef(null);
@@ -257,7 +259,11 @@ const HomeScreen = () => {
             </View>
           )}
           {/* Masonry grid*/}
-          <View>{images.length > 0 && <ImagesGrid images={images} />}</View>
+          <View>
+            {images.length > 0 && (
+              <ImagesGrid images={images} router={router} />
+            )}
+          </View>
         </View>
       </ScrollView>
       <FiltersModal
